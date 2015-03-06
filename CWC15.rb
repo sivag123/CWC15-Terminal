@@ -106,7 +106,8 @@ class Match
 		puts "*"*78
 		date = DateTime.parse(@match_data['matchInfo']['matchDate']).strftime("%d/%m/%Y")
 		print "\n\t\t\t\t#{date}\n"
-		print "\t\t\tAt #{@venue}\n\t\t"
+		print "\t\t\t      Match Number: #{@match_num}"
+		print "\n\t\t\t    At #{@venue}\n\t\t"
 		print "Toss Winner: #{@toss_winner_status}\n" unless @toss_winner_status.nil?
 	end
 
@@ -191,6 +192,16 @@ class Match
 				print "\n"
 
 				print_current_players(@striker_id,@non_striker_id,@bowler_id)
+
+				print "\n"
+				print "-"*78
+				print "\n"
+
+				print "Current over:",@current_over
+				print "  "*5
+				print "Current over Detail",@current_over_detail
+				print "\n"
+
 			else
 					
 				print "\n"
@@ -220,6 +231,19 @@ class Match
 				print "  "*5
 				print "Current over Detail",@current_over_detail
 				print "\n"
+
+				if @inning2over.include?(".")
+					rem_balls=(50-(@inning2over.split(".")[0].to_i+1))*6+(6-@inning2over.split(".")[1].to_i)
+				else
+					rem_balls=(50-(@inning2over.to_i))*6
+				end
+				print "\n"
+				print "-"*78
+				print "\n"
+
+				print (@inning1score.to_i-@inning2score.to_i+1)," Runs required off ",rem_balls," Balls"
+				print "\n"
+
 
 				print "RequiredRun-Rate is ", @match_data["currentState"]["requiredRunRate"]
 			end
