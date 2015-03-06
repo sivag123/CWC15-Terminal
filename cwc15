@@ -206,15 +206,12 @@ class Match
 
 			else
 					
-				print "\n"
-				print "-"*78
-
 				print "\n\t#{@team[@first_inning]} batted first \n\t\t"
 				print "score: #{@inning1score}/#{@inning1wicket}"
 				print " in #{@inning1over} overs"
 				print " (RR: #{@inning1runrate})"
 
-				print_top_players(@innings[0]["scorecard"]["battingStats"],@innings[0]["scorecard"]["bowlingStats"])
+				print_top_players(@top_batsmen,@top_bowler)
 
 				print "\n"
 				print "-"*78
@@ -228,11 +225,11 @@ class Match
 
 				print "\n"
 				print "-"*78
+				print "\n"
 
 				print "Current over:",@current_over
 				print "  "*5
 				print "Current over Detail",@current_over_detail
-				print "\n"
 
 				if @inning2over.include?(".")
 					rem_balls=(50-(@inning2over.split(".")[0].to_i+1))*6+(6-@inning2over.split(".")[1].to_i)
