@@ -4,6 +4,19 @@ require 'json'
 
 class Match
 
+	def initialize
+		print "Enter Match Number: "
+		@match_num = gets.chomp
+		@match_num = "0"+@match_num if @match_num.to_i < 10 || 	@match_num.length < 2
+
+		load_match_data
+
+		@team = []
+		@team << @match_data["matchInfo"]["teams"][0]["team"]["fullName"]
+		@team << @match_data["matchInfo"]["teams"][1]["team"]["fullName"]
+
+		@venue = @match_data["matchInfo"]["venue"]["fullName"]<<","<<@match_data["matchInfo"]["venue"]["city"]<<","<<@match_data["matchInfo"]["venue"]["country"]
+	end
 
 #######  Helper Functions #######
 
@@ -82,9 +95,38 @@ class Match
 	end
 
 	def load_match_data
-		uri=URI("http://cdn.pulselive.com/dynamic/data/core/cricket/2012/cwc-2015/cwc-2015-28/scoring.js");
-		data_from_site=Net::HTTP.get(uri);
-		@match_data=JSON.parse(data_from_site[10..-3])
+		@url = URI("https://cdn.pulselive.com/dynamic/data/core/cricket/2012/cwc-2015/cwc-2015-"<<@match_num<<"/scoring.js")
+		@json = Net::HTTP.get(@url)
+		@match_data = JSON.parse(@json[10..-3])
+	end
+
+	def show_details
+		system "clear"
+		print "\t\t\t#{@team[0]}\t vs \t#{@team[1]}\n "
+		puts "*"*78
+		date = DateTime.parse(@match_data['matchInfo']['matchDate']).strftime("%d/%m/%Y")
+		print "\n\t\t\t\t#{date}\n"
+		print "\t\t\tAt #{@venue}\n\t\t"
+		print "Toss Winner: #{@toss_winner_status}\n" unless @toss_winner_status.nil?
+	end
+
+	def print_top_players(batsmen,bowler)
+		print "\n\t#{get_player_name(batsmen[0]["playerId"])} - #{batsmen[0]['r']}(#{batsmen[0]['b']})"
+		print "\t\t#{get_player_name(bowler[0]["playerId"])} - #{bowler[0]['ov']}-#{bowler[0]['maid']}-#{bowler[0]['r']}-#{bowler[0]['w']}"
+		print "\n\t#{get_player_name(batsmen[1]["playerId"])} - #{batsmen[1]['r']}(#{batsmen[1]['b']})"
+		print "\t\t#{get_player_name(bowler[1]["playerId"])} - #{bowler[1]['ov']}-#{bowler[1]['maid']}-#{bowler[1]['r']}-#{bowler[1]['w']}"
+	end
+
+	def print_match_status
+		print "\n\n\t#{@match_data["matchInfo"]["matchStatus"]["text"]}\tMOM: #{@match_data["matchInfo"]["additionalInfo"]["result.playerofthematch"]}\n\n"
+		print "~"*78
+		print "\n"
+	end
+
+	def print_current_players(batsmen1_id,batsmen2_id,bowler_id)
+		print "\n\t#{get_player_name(batsmen1_id)} - #{get_batsmen_score(batsmen1_id)}"
+		print "\t\t#{get_player_name(bowler_id)} - #{get_bowler_wicket(bowler_id)}"
+		print "\n\t#{get_player_name(batsmen2_id)} - #{get_batsmen_score(batsmen2_id)}"
 	end
 
 ######### End of helpers ##############
@@ -127,13 +169,14 @@ class Match
 		end
 	end
 
-	def print_current_players(batsmen1_id,batsmen2_id,bowler_id)
-		print "\n\t#{get_player_name(batsmen1_id)} - #{get_batsmen_score(batsmen1_id)})"
-		print "\t\t#{get_player_name(bowler_id)} - #{get_bowler_wicket(bowler_id)}"
-		print "\n\t#{get_player_name(batsmen2_id)} - #{get_batsmen_score(batsmen2_id)})"
-	end
 
 	def show_scorecard
+
+		@toss_winner_status = @match_data["matchInfo"]["additionalInfo"]["toss.elected"] 
+		@first_inning = @match_data["matchInfo"]["battingOrder"][0]
+		@second_inning = @match_data["matchInfo"]["battingOrder"][1]
+
+		show_details
 
 		print "\n"
 		print "-"*78
@@ -186,6 +229,60 @@ class Match
 
 		puts @match_status
 	end
+
+	def completed_case
+		
+		get_player_detail_hash
+		
+		@toss_winner_status = @match_data["matchInfo"]["additionalInfo"]["toss.elected"] 
+		@first_inning = @match_data["matchInfo"]["battingOrder"][0]
+		@second_inning = @match_data["matchInfo"]["battingOrder"][1]
+
+		show_details
+
+		innings = @match_data["innings"]
+		inning1score = innings[0]["scorecard"]
+		inning2score = innings[1]["scorecard"]
+		inning1batsmen = inning1score["battingStats"]
+		inning2batsmen = inning2score["battingStats"]
+		inning1bowler = inning1score["bowlingStats"]
+		inning2bowler = inning2score["bowlingStats"]
+
+		inning1topB = top_batsmen(inning1batsmen)
+		inning1topBw = top_bowler(inning1bowler)
+		inning2topB = top_batsmen(inning2batsmen)
+		inning2topBw = top_bowler(inning2bowler)
+
+		print "\n"
+		print "-"*78
+
+		print "\n\t#{@team[@first_inning]} batted first \n\t\t"
+		print "score: #{inning1score['runs']}/#{inning1score['wkts']}"
+		print " in #{innings[0]['overProgress']} overs"
+		print " (RR: #{innings[0]['runRate']})"
+
+		print_top_players(inning1topB,inning1topBw)
+
+		print "\n"
+		print "-"*78
+
+		print "\n\t#{@team[@second_inning]} batted second \n\t\t"
+		print "score: #{inning2score['runs']}/#{inning2score['wkts']}"
+		print " in #{innings[1]['overProgress']} overs"
+		print " (RR: #{innings[1]['runRate']})  "
+
+		print_top_players(inning2topB,inning2topBw)
+
+		print "\n"
+		print "-"*78
+
+		print_match_status
+	end
+
+	def future_case
+		show_details
+		print "\n\n\t\tMatch Yet to be started! Stay tuned for live updates!\n"
+	end
 	
 	
 
@@ -209,7 +306,5 @@ class Match
 end
 
 m=Match.new
-
-
 m.load_match_data
 m.start_match
