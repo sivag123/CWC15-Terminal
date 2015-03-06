@@ -2,9 +2,12 @@
 ================
 
 A terminal based score-card client for Cricket World Cup 2015 matches. This is completely written in ruby. 
-To execute this on your machine, just download the script and do,
-  ruby CWC15.rb
+To execute this on your machine, just download the zip and do,
+  ./install.sh
 in your terminal.
+then type
+  cwc15
+to use the utility.
 It will ask for match number, which can be found at sites like www.icc-cricket.com (A small work for you to do :p)
 
 Features
